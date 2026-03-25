@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Document Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  transition: 0.4s;
+}
+
+/* DARK MODE DEFAULT */
+body.dark {
+  background: linear-gradient(135deg, #020617, #0f172a);
+  color: white;
+}
+
+/* LIGHT MODE */
+body.light {
+  background: #f1f5f9;
+  color: black;
+}
+
+/* Layout */
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  backdrop-filter: blur(15px);
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.sidebar button i {
+  margin-right: 10px;
+}
+
+.sidebar button:hover {
+  background: #38bdf8;
+  color: black;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 30px;
+  text-align: center;
+}
+
+/* Glass Card */
+.card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px auto;
+  width: 80%;
+}
+
+/* Inputs */
+input, textarea {
+  width: 90%;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+/* Buttons */
+.main-btn {
+  padding: 12px 20px;
+  margin: 10px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(45deg, #38bdf8, #0ea5e9);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.main-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #38bdf8;
+}
+
+/* Preview */
+iframe {
+  width: 95%;
+  height: 500px;   /* bigger preview */
+  border-radius: 12px;
+  background: white;
+  display: block;
+  margin: 20px auto;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+iframe {
+  display: block;
+  margin: 20px auto;
+}
+/* Loader */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top: 6px solid #38bdf8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* Toggle Button */
+.toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+}
+ .card, .sidebar button {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+} 
+    </style>
+</head>
+
+<body>
+
+    <div class="toggle" onclick="toggleMode()">
+  🌙 / ☀️
+</div>
+<div id="loader" style="display:none; position:fixed; top:50%; left:50%;">
+  <div class="spinner"></div>
+</div>
+
+<div class="container">
+
+  <div class="sidebar">
+    <button onclick="loadTemplate('certificate')"><i class="fas fa-award"></i> Certificate</button>
+<button onclick="loadTemplate('invoice')"><i class="fas fa-file-invoice"></i> Invoice</button>
+<button onclick="loadTemplate('resume')"><i class="fas fa-user"></i> Resume</button>
+  </div>
+
+  <div class="main">
+
+    <h1>🚀 Smart Document Generator</h1>
+<p style="opacity:0.7;">Create, Preview & Convert Documents to PDF</p>
+
+    <!-- PDF Upload -->
+   <h3>Upload HTML File</h3>
+<input type="file" id="htmlUpload" accept=".html">
+<button onclick="previewHTMLFile()">Preview HTML</button>
+
+    <!-- Forms -->
+    <div id="certificateForm" style="display:none;">
+      <input id="certName" placeholder="Name"><br>
+      <input id="certCourse" placeholder="Course"><br>
+      <input id="certRoll" placeholder="Roll No"><br>
+      <input id="certCollege" placeholder="College"><br>
+      <input id="certBoard" placeholder="Board"><br>
+      <button onclick="generateCertificate()">Generate</button>
+    </div>
+
+   <div id="invoiceForm" style="display:none;">
+
+  <input id="clientName" placeholder="Client Name"><br><br>
+   <input id="companyName" placeholder="Company Name"><br>
+<input id="companyAddress" placeholder="Company Address"><br>
+<input id="companyEmail" placeholder="Company Email"><br><br>
+  <div id="itemsContainer">
+    <div class="itemRow">
+      <input class="itemName" placeholder="Item">
+      <input class="itemPrice" placeholder="Price">
+    </div>
+  </div>
+
+  <button onclick="addItem()">+ Add Item</button><br><br>
+
+  <input id="gst" placeholder="GST % (optional)"><br><br>
+
+  <button onclick="generateInvoice()">Generate Invoice</button>
+
+</div>
+
+    <div id="resumeForm" style="display:none;">
+      <input id="resName" placeholder="Name"><br>
+      <input id="resEmail" placeholder="Email"><br>
+      <input id="resPhone" placeholder="Phone"><br>
+      <input id="resSkills" placeholder="Skills"><br>
+      <input id="resEdu" placeholder="Education"><br>
+      <button onclick="generateResume()">Generate</button>
+    </div>
+
+    <textarea id="htmlInput"></textarea>
+
+    <br>
+
+    <button class="main-btn" onclick="preview()">Preview</button>
+    <button class="main-btn" onclick="convert()">Convert PDF</button>
+    <button class="main-btn" onclick="fullscreenPreview()">Full Screen Preview</button>
+    <br>
+
+    <a id="downloadLink" style="display:none;" class="main-btn">Download PDF</a>
+
+   <div class="card">
+  <iframe id="previewFrame"></iframe>
+</div>
+
+  </div>
+</div>
+
+<script>
+let logoBase64 = "";
+function preview(){
+  let html = document.getElementById("htmlInput").value;
+  document.getElementById("previewFrame").srcdoc = html;
+}
+
+function convert(){
+
+  let html = document.getElementById("htmlInput").value;
+
+  let blob = new Blob([html], { type: "text/html" });
+  let file = new File([blob], "file.html");
+
+  let formData = new FormData();
+  formData.append("htmlFile", file);
+
+  document.getElementById("loader").style.display = "block";
+
+  fetch("/convert", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.blob())
+  .then(blob => {
+
+    document.getElementById("loader").style.display = "none";
+
+    let url = URL.createObjectURL(blob);
+
+    // Show preview only
+    window.open(url);
+
+    // Show manual download button
+    let link = document.getElementById("downloadLink");
+    link.href = url;
+    link.style.display = "inline-block";
+
+  });
+}
+
+function previewPDF(){
+  let file = document.getElementById("pdfUpload").files[0];
+  let url = URL.createObjectURL(file);
+  document.getElementById("previewFrame").src = url;
+}
+
+function loadTemplate(type){
+
+  document.getElementById("certificateForm").style.display = "none";
+  document.getElementById("invoiceForm").style.display = "none";
+  document.getElementById("resumeForm").style.display = "none";
+
+  if(type === "certificate"){
+    document.getElementById("certificateForm").style.display = "block";
+  }
+
+  if(type === "invoice"){
+    document.getElementById("invoiceForm").style.display = "block";
+  }
+
+  if(type === "resume"){
+    document.getElementById("resumeForm").style.display = "block";
+  }
+}
+
+function generateCertificate(){
+  let name = document.getElementById("certName").value;
+let course = document.getElementById("certCourse").value;
+let roll = document.getElementById("certRoll").value;
+let college = document.getElementById("certCollege").value;
+let board = document.getElementById("certBoard").value;
+
+let html = `
+<div style="
+  width:900px;
+  margin:auto;
+  padding:50px;
+  border:20px double gold;
+  text-align:center;
+  font-family: Georgia;
+  background:#fff8dc;
+">
+
+  <h1 style="color:#b45309;">${board}</h1>
+  <h2>${college}</h2>
+
+  <h1 style="font-size:40px; margin:30px 0;">Certificate of Completion</h1>
+
+  <p>This is proudly presented to</p>
+
+  <h2 style="font-size:32px;">${name}</h2>
+
+  <p>Roll No: ${roll}</p>
+
+  <p>for successfully completing</p>
+
+  <h3>${course}</h3>
+
+  <br><br>
+
+  <div style="display:flex; justify-content:space-between;">
+    <p>Date: ${new Date().toLocaleDateString()}</p>
+    <p>Signature</p>
+  </div>
+
+</div>
+`;
+
+  htmlInput.value = html;
+  preview();
+}
+
+function generateInvoice(){
+
+  let company = document.getElementById("companyName").value;
+  let address = document.getElementById("companyAddress").value;
+  let email = document.getElementById("companyEmail").value;
+
+  let client = document.getElementById("clientName").value;
+
+  let itemNames = document.getElementsByClassName("itemName");
+  let itemPrices = document.getElementsByClassName("itemPrice");
+
+  let rows = "";
+  let total = 0;
+
+  for(let i = 0; i < itemNames.length; i++){
+
+    let name = itemNames[i].value;
+    let price = Number(itemPrices[i].value || 0);
+
+    if(name){
+      rows += `
+<tr style="background:${i % 2 === 0 ? '#f1f5f9' : '#ffffff'};">
+  <td style="padding:10px; border:1px solid #ccc;">${name}</td>
+  <td style="padding:10px; border:1px solid #ccc;">₹${price}</td>
+</tr>
+`;
+      total += price;
+    }
+  }
+
+  let gstPercent = Number(document.getElementById("gst").value || 0);
+  let gstAmount = (total * gstPercent) / 100;
+  let finalTotal = total + gstAmount;
+
+  let invoiceNumber = generateInvoiceNumber();
+
+  let html = `
+<div style="width:800px; margin:auto; padding:30px; font-family:Arial;">
+
+  <div style="display:flex; justify-content:space-between;">
+    <div>
+      <h2>${company}</h2>
+      <p>${address}</p>
+      <p>${email}</p>
+    </div>
+    ${logoBase64 ? `<img src="${logoBase64}" width="80">` : ""}
+  </div>
+
+  <hr>
+
+  <h1 style="text-align:center;">INVOICE</h1>
+
+  <p><strong>Invoice No:</strong> ${invoiceNumber}</p>
+  <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+  <p><strong>Client:</strong> ${client}</p>
+
+  <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+  <tr style="background:#0ea5e9; color:white;">
+    <th style="padding:10px; border:1px solid #ccc;">Item</th>
+    <th style="padding:10px; border:1px solid #ccc;">Price</th>
+  </tr>
+  ${rows}
+</table>
+
+  <div style="text-align:right; margin-top:20px;">
+    <p>Subtotal: ₹${total}</p>
+    <p>GST: ₹${gstAmount.toFixed(2)}</p>
+    <h2>Total: ₹${finalTotal.toFixed(2)}</h2>
+  </div>
+
+  <br><br>
+
+  <p>Authorized Signature</p>
+
+</div>
+`;
+
+  document.getElementById("htmlInput").value = html;
+  preview();
+}
+
+function generateResume(){
+  let name = document.getElementById("resName").value;
+let email = document.getElementById("resEmail").value;
+let phone = document.getElementById("resPhone").value;
+let skills = document.getElementById("resSkills").value.split(",");
+let edu = document.getElementById("resEdu").value;
+
+  let skillList = skills.map(s => `<li>${s}</li>`).join("");
+
+  let html = `
+<div style="width:900px; margin:auto; font-family:Arial; display:flex;">
+
+  <!-- Left Sidebar -->
+  <div style="width:30%; background:#0ea5e9; color:white; padding:20px;">
+    <h2>${name}</h2>
+    <p>${email}</p>
+    <p>${phone}</p>
+
+    <h3>Skills</h3>
+    <ul>${skillList}</ul>
+  </div>
+
+  <!-- Right Content -->
+  <div style="width:70%; padding:30px;">
+    <h2>Education</h2>
+    <p>${edu}</p>
+
+    <h2>Projects</h2>
+    <p>HTML to PDF Converter Web App</p>
+
+    <h2>Experience</h2>
+    <p>Fresher</p>
+  </div>
+
+</div>
+`;
+  htmlInput.value = html;
+  preview();
+}
+function previewHTMLFile(){
+
+  let file = document.getElementById("htmlUpload").files[0];
+
+  if(!file){
+    alert("Upload HTML file first");
+    return;
+  }
+
+  let reader = new FileReader();
+
+  reader.onload = function(e){
+    let htmlContent = e.target.result;
+
+    // show in textarea
+    document.getElementById("htmlInput").value = htmlContent;
+
+    // preview
+    document.getElementById("previewFrame").srcdoc = htmlContent;
+  };
+
+  reader.readAsText(file);
+}
+function addItem(){
+
+  let container = document.getElementById("itemsContainer");
+
+  let div = document.createElement("div");
+  div.classList.add("itemRow");
+
+  div.innerHTML = `
+    <input class="itemName" placeholder="Item">
+    <input class="itemPrice" placeholder="Price">
+  `;
+
+  container.appendChild(div);
+}
+document.body.classList.add("dark");
+
+function toggleMode(){
+  if(document.body.classList.contains("dark")){
+    document.body.classList.remove("dark");
+    document.body.classList.add("light");
+  } else {
+    document.body.classList.remove("light");
+    document.body.classList.add("dark");
+  }
+}
+function generateInvoiceNumber(){
+  let count = localStorage.getItem("invoiceCount") || 0;
+  count++;
+
+  localStorage.setItem("invoiceCount", count);
+
+  return "INV-2026-" + String(count).padStart(3, '0');
+}
+function fullscreenPreview(){
+  let frame = document.getElementById("previewFrame");
+
+  if(frame.requestFullscreen){
+    frame.requestFullscreen();
+  }
+}
+</script>
+
+</body>
+</html>
