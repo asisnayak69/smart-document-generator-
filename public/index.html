@@ -2,535 +2,1396 @@
 <html>
 <head>
   <title>Smart Document Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    :root {
+      --accent: #38bdf8;
+      --accent2: #0ea5e9;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+
     body {
-  margin: 0;
-  font-family: 'Poppins', sans-serif;
-  transition: 0.4s;
-}
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      transition: background 0.4s, color 0.4s;
+    }
 
-/* DARK MODE DEFAULT */
-body.dark {
-  background: linear-gradient(135deg, #020617, #0f172a);
-  color: white;
-}
+    /* DARK MODE DEFAULT */
+    body.dark {
+      background: linear-gradient(135deg, #020617, #0f172a);
+      color: white;
+    }
 
-/* LIGHT MODE */
-body.light {
-  background: #f1f5f9;
-  color: black;
-}
+    /* LIGHT MODE */
+    body.light {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    body.light .sidebar {
+      background: rgba(255,255,255,0.85);
+      border-right: 1px solid #e2e8f0;
+    }
+    body.light .card { background: rgba(255,255,255,0.9); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    body.light input, body.light textarea, body.light select {
+      background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1;
+    }
+    body.light .sidebar button { color: #0f172a; }
+    body.light #searchInvoice { background: #f1f5f9; color: #0f172a; }
+    body.light .stat-box { background: rgba(14,165,233,0.1); }
+    body.light .tag { background: #e0f2fe; color: #0369a1; }
+    body.light .toast { background: #1e293b; }
+    body.light .modal-content { background: #fff; color: #0f172a; }
+    body.light .modal-content input { background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; }
+    body.light .char-counter { color: #64748b; }
 
-/* Layout */
-.container {
-  display: flex;
-  height: 100vh;
-}
+    /* Layout */
+    .container { display: flex; height: 100vh; }
 
-/* Sidebar */
-.sidebar {
-  width: 240px;
-  backdrop-filter: blur(15px);
-  background: rgba(255,255,255,0.05);
-  padding: 20px;
-  border-right: 1px solid rgba(255,255,255,0.1);
-}
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      backdrop-filter: blur(15px);
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: width 0.3s;
+      position: relative;
+    }
+    .sidebar.collapsed { width: 60px; overflow: hidden; }
+    .sidebar.collapsed .sidebar-label, .sidebar.collapsed h2, .sidebar.collapsed #searchInvoice, .sidebar.collapsed .sidebar-footer { display: none; }
+    .sidebar.collapsed button { justify-content: center; padding: 12px 0; }
+    .sidebar.collapsed button i { margin-right: 0; }
 
-.sidebar button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  background: transparent;
-  border: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: 0.3s;
-}
+    .sidebar-toggle-btn {
+      position: absolute;
+      top: 18px;
+      right: -14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent2);
+      border: none;
+      color: white;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
 
-.sidebar button i {
-  margin-right: 10px;
-}
+    .sidebar button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      background: transparent;
+      border: none;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+    }
+    .sidebar button i { margin-right: 10px; width: 18px; text-align: center; }
+    .sidebar button:hover { background: #0ea5e9; color: white; }
+    .sidebar button.active { background: #0ea5e9; color: white; }
 
-.sidebar button:hover {
-  background: #38bdf8;
-  color: black;
-}
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.75rem;
+      opacity: 0.5;
+      text-align: center;
+    }
 
-/* Main */
-.main {
-  flex: 1;
-  padding: 30px;
-  text-align: center;
-}
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 30px;
+      text-align: center;
+      overflow-y: auto;
+    }
 
-/* Glass Card */
-.card {
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: 12px;
-  margin: 20px auto;
-  width: 80%;
-}
+    /* Glass Card */
+    .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      width: 80%;
+    }
 
-/* Inputs */
-input, textarea {
-  width: 90%;
-  padding: 10px;
-  margin: 10px;
-  border-radius: 8px;
-  border: none;
-}
+    /* Inputs */
+    input, textarea, select {
+      width: 90%;
+      padding: 10px 14px;
+      margin: 8px auto;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      display: block;
+      transition: border 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+    }
+    select option { background: #0f172a; color: white; }
 
-/* Buttons */
-.main-btn {
-  padding: 12px 20px;
-  margin: 10px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(45deg, #38bdf8, #0ea5e9);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-}
+    #htmlInput {
+      height: 350px;
+      resize: vertical;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+    }
 
-.main-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #38bdf8;
-}
+    /* Buttons */
+    .main-btn {
+      padding: 12px 20px;
+      margin: 6px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(45deg, #38bdf8, #0ea5e9);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      font-family: 'Poppins', sans-serif;
+    }
+    .main-btn:hover { transform: scale(1.05); box-shadow: 0 0 15px #38bdf8; }
 
-/* Preview */
-iframe {
-  width: 95%;
-  height: 500px;   /* bigger preview */
-  border-radius: 12px;
-  background: white;
-  display: block;
-  margin: 20px auto;
-  box-shadow: 0 0 15px rgba(0,0,0,0.3);
-}
-iframe {
-  display: block;
-  margin: 20px auto;
-}
-/* Loader */
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 6px solid rgba(255,255,255,0.2);
-  border-top: 6px solid #38bdf8;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
+    .btn-success { background: linear-gradient(45deg, #22c55e, #16a34a); }
+    .btn-success:hover { box-shadow: 0 0 15px #22c55e; }
+    .btn-danger { background: linear-gradient(45deg, #ef4444, #dc2626); }
+    .btn-warn { background: linear-gradient(45deg, #f59e0b, #d97706); }
+    .btn-sm { padding: 7px 14px; font-size: 0.82rem; }
 
-@keyframes spin {
-  100% { transform: rotate(360deg); }
-}
+    /* Preview */
+    iframe {
+      width: 95%;
+      height: 500px;
+      border-radius: 12px;
+      background: white;
+      display: block;
+      margin: 20px auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      border: none;
+    }
 
-/* Toggle Button */
-.toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  cursor: pointer;
-}
- .card, .sidebar button {
-  animation: fadeIn 0.5s ease-in-out;
-}
+    /* Loader */
+    .spinner {
+      width: 50px; height: 50px;
+      border: 6px solid rgba(255,255,255,0.2);
+      border-top: 6px solid #38bdf8;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-} 
-    </style>
+    /* Toggle Button */
+    .toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      cursor: pointer;
+      z-index: 100;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: inherit;
+      padding: 8px 14px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      transition: 0.2s;
+    }
+    .toggle:hover { background: rgba(255,255,255,0.2); }
+
+    .card, .sidebar button { animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #searchInvoice {
+      width: 100%; padding: 10px; margin-top: 10px;
+      border-radius: 8px; border: none; outline: none;
+      background: rgba(255,255,255,0.1); color: white;
+      font-family: 'Poppins', sans-serif;
+    }
+    .sidebar input { margin-bottom: 10px; }
+
+    /* ── NEW: Toast Notification ── */
+    .toast-container {
+      position: fixed; bottom: 25px; right: 25px;
+      z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast {
+      background: #1e293b;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex; align-items: center; gap: 10px;
+      animation: slideInRight 0.3s ease, fadeOut 0.4s ease 2.6s forwards;
+      min-width: 220px;
+    }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error   { border-left: 4px solid var(--danger); }
+    .toast.info    { border-left: 4px solid var(--accent); }
+    .toast.warn    { border-left: 4px solid var(--warn); }
+    @keyframes slideInRight {
+      from { transform: translateX(60px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; } to { opacity: 0; transform: translateY(10px); }
+    }
+
+    /* ── NEW: Progress Bar ── */
+    .progress-bar-wrap {
+      width: 90%; height: 6px; background: rgba(255,255,255,0.1);
+      border-radius: 4px; margin: 8px auto; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      border-radius: 4px; width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* ── NEW: Stats Strip ── */
+    .stats-strip {
+      display: flex; justify-content: center; gap: 20px;
+      margin: 0 auto 20px; flex-wrap: wrap; max-width: 700px;
+    }
+    .stat-box {
+      background: rgba(56,189,248,0.12);
+      border: 1px solid rgba(56,189,248,0.25);
+      border-radius: 10px; padding: 10px 20px; text-align: center;
+      min-width: 110px;
+    }
+    .stat-box .stat-num { font-size: 1.5rem; font-weight: 600; color: var(--accent); }
+    .stat-box .stat-label { font-size: 0.72rem; opacity: 0.7; }
+
+    /* ── NEW: Tag badges ── */
+    .tag {
+      display: inline-block; background: rgba(56,189,248,0.18);
+      color: var(--accent); border-radius: 20px;
+      padding: 2px 10px; font-size: 0.72rem; margin: 2px;
+    }
+
+    /* ── NEW: Field labels ── */
+    .field-label {
+      display: block; width: 90%; margin: 8px auto 2px;
+      font-size: 0.75rem; opacity: 0.6; text-align: left;
+    }
+
+    /* ── NEW: Section header ── */
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      justify-content: center; margin-bottom: 12px;
+    }
+    .section-header h2 { margin: 0; }
+    .section-badge {
+      background: linear-gradient(45deg, #38bdf8, #0ea5e9);
+      color: white; border-radius: 6px; padding: 3px 10px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+
+    /* ── NEW: Item row layout ── */
+    .itemRow {
+      display: flex; gap: 8px; justify-content: center;
+      align-items: center; margin-bottom: 6px; flex-wrap: wrap;
+      animation: fadeIn 0.3s ease;
+    }
+    .itemRow input { width: 35%; margin: 0; }
+    .itemRow .item-qty { width: 13%; }
+    .itemRow .item-del {
+      background: var(--danger); border: none; color: white;
+      border-radius: 6px; padding: 8px 12px; cursor: pointer;
+      font-size: 0.85rem; transition: 0.2s;
+    }
+    .itemRow .item-del:hover { transform: scale(1.1); }
+
+    /* ── NEW: Char counter ── */
+    .char-counter { font-size: 0.72rem; opacity: 0.5; text-align: right; width: 90%; margin: 0 auto; }
+
+    /* ── NEW: Resume template picker ── */
+    .template-grid {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0;
+    }
+    .tpl-card {
+      width: 100px; padding: 10px; border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.1);
+      cursor: pointer; font-size: 0.78rem; text-align: center;
+      transition: 0.2s; background: rgba(255,255,255,0.05);
+    }
+    .tpl-card:hover, .tpl-card.selected {
+      border-color: var(--accent); background: rgba(56,189,248,0.12);
+    }
+    .tpl-card .tpl-icon { font-size: 1.6rem; margin-bottom: 4px; }
+
+    /* ── NEW: Copy code button ── */
+    .code-toolbar {
+      display: flex; gap: 8px; justify-content: flex-end;
+      width: 95%; margin: 0 auto 6px;
+    }
+
+    /* ── NEW: Color picker row ── */
+    .color-row {
+      display: flex; align-items: center; gap: 10px;
+      width: 90%; margin: 8px auto;
+    }
+    .color-row label { font-size: 0.78rem; opacity: 0.7; min-width: 110px; text-align: left; }
+    .color-row input[type="color"] {
+      width: 40px; height: 34px; padding: 2px; border-radius: 6px;
+      cursor: pointer; margin: 0; border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* ── NEW: Signature pad ── */
+    #sigCanvas {
+      border: 1px dashed rgba(255,255,255,0.3);
+      border-radius: 8px; cursor: crosshair; display: block;
+      margin: 10px auto; background: rgba(255,255,255,0.04);
+    }
+
+    /* ── NEW: Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-content {
+      background: #0f172a; border-radius: 14px; padding: 28px;
+      width: 420px; max-width: 95vw;
+      border: 1px solid rgba(255,255,255,0.1);
+      animation: fadeIn 0.25s ease;
+    }
+    .modal-content h3 { margin-top: 0; }
+    .modal-content input {
+      width: 100%; margin: 6px 0;
+      background: rgba(255,255,255,0.07); color: white;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    /* ── NEW: Preview toolbar ── */
+    .preview-toolbar {
+      display: flex; gap: 8px; justify-content: center;
+      align-items: center; flex-wrap: wrap; margin-bottom: 6px;
+    }
+
+    /* ── NEW: Print btn hidden in print ── */
+    @media print { .no-print { display: none !important; } }
+
+    /* ── NEW: Saved invoices grid in panel ── */
+    .inv-grid {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: center; margin-top: 10px;
+    }
+    .inv-card {
+      width: 160px; padding: 14px; border-radius: 10px;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: white; cursor: pointer; position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-size: 0.85rem;
+    }
+    .inv-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(14,165,233,0.4); }
+    .inv-card .inv-del {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(255,255,255,0.25); border: none; color: white;
+      border-radius: 50%; width: 22px; height: 22px; font-size: 11px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .inv-card .inv-del:hover { background: var(--danger); }
+
+    /* ── NEW: Sidebar saved invoices panel ── */
+    #savedInvoicesPanel {
+      display: none;
+      margin-top: 10px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.4); border-radius: 4px; }
+  </style>
 </head>
 
-<body>
+<body class="dark">
 
-    <div class="toggle" onclick="toggleMode()">
-  🌙 / ☀️
-</div>
-<div id="loader" style="display:none; position:fixed; top:50%; left:50%;">
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Dark/Light toggle -->
+<button class="toggle no-print" onclick="toggleMode()">🌙 / ☀️</button>
+
+<!-- Loader -->
+<div id="loader" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9999;">
   <div class="spinner"></div>
+</div>
+
+<!-- Signature Modal -->
+<div class="modal-overlay" id="sigModal">
+  <div class="modal-content">
+    <h3>✍️ Draw Your Signature</h3>
+    <canvas id="sigCanvas" width="360" height="130"></canvas>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button class="main-btn btn-sm" onclick="clearSig()">Clear</button>
+      <button class="main-btn btn-sm btn-success" onclick="saveSig()">Use Signature</button>
+      <button class="main-btn btn-sm btn-danger" onclick="closeSigModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <div class="container">
 
-  <div class="sidebar">
-    <button onclick="loadTemplate('certificate')"><i class="fas fa-award"></i> Certificate</button>
-<button onclick="loadTemplate('invoice')"><i class="fas fa-file-invoice"></i> Invoice</button>
-<button onclick="loadTemplate('resume')"><i class="fas fa-user"></i> Resume</button>
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Collapse sidebar">
+      <i class="fas fa-chevron-left" id="sidebarChevron"></i>
+    </button>
+
+    <h2 style="margin-bottom:10px;">📄 <span class="sidebar-label">Docs</span></h2>
+
+    <!-- Search for saved invoices -->
+    <input id="searchInvoice" placeholder="🔍 Search saved…" oninput="renderSavedPanel()">
+    <div id="savedInvoicesPanel">
+      <div class="inv-grid" id="savedInvGrid"></div>
+    </div>
+
+    <button onclick="setActive(this);showSection('certificate')">
+      <i class="fas fa-award"></i><span class="sidebar-label"> Certificate</span>
+    </button>
+    <button onclick="setActive(this);showSection('invoice')">
+      <i class="fas fa-file-invoice"></i><span class="sidebar-label"> Invoice</span>
+    </button>
+    <button onclick="setActive(this);showSection('resume')">
+      <i class="fas fa-user"></i><span class="sidebar-label"> Resume</span>
+    </button>
+    <button onclick="setActive(this);showSection('html')">
+      <i class="fas fa-code"></i><span class="sidebar-label"> HTML → PDF</span>
+    </button>
+    <button onclick="setActive(this);showSection('saved')">
+      <i class="fas fa-folder"></i><span class="sidebar-label"> Saved Invoices</span>
+    </button>
+
+    <div class="sidebar-footer">Smart Doc Gen v2.0</div>
   </div>
 
+  <!-- ═══ MAIN ═══ -->
   <div class="main">
+    <h1 class="no-print">🚀 Smart Document Generator</h1>
+    <p style="opacity:0.7;" class="no-print">Create, Preview & Convert Documents to PDF</p>
 
-    <h1>🚀 Smart Document Generator</h1>
-<p style="opacity:0.7;">Create, Preview & Convert Documents to PDF</p>
+    <!-- Stats strip -->
+    <div class="stats-strip no-print">
+      <div class="stat-box">
+        <div class="stat-num" id="statDocs">0</div>
+        <div class="stat-label">Generated</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statSaved">0</div>
+        <div class="stat-label">Saved Invoices</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statInvNo">—</div>
+        <div class="stat-label">Last Invoice #</div>
+      </div>
+    </div>
 
-    <!-- PDF Upload -->
-   <h3>Upload HTML File</h3>
-<input type="file" id="htmlUpload" accept=".html">
-<button onclick="previewHTMLFile()">Preview HTML</button>
-
-    <!-- Forms -->
+    <!-- ══ CERTIFICATE FORM ══ -->
     <div id="certificateForm" style="display:none;">
-      <input id="certName" placeholder="Name"><br>
-      <input id="certCourse" placeholder="Course"><br>
-      <input id="certRoll" placeholder="Roll No"><br>
-      <input id="certCollege" placeholder="College"><br>
-      <input id="certBoard" placeholder="Board"><br>
-      <button onclick="generateCertificate()">Generate</button>
+      <div class="card">
+        <div class="section-header">
+          <h2>🏆 Certificate</h2>
+          <span class="section-badge">NEW</span>
+        </div>
+
+        <!-- Theme Picker -->
+        <label class="field-label">Certificate Theme</label>
+        <select id="certTheme" style="width:90%; display:block; margin:0 auto 8px;">
+          <option value="classic">🏛️ Classic Gold</option>
+          <option value="modern">🔷 Modern Blue</option>
+          <option value="dark">🌑 Dark Elegant</option>
+          <option value="green">🌿 Green Achievement</option>
+        </select>
+
+        <label class="field-label">Recipient Name</label>
+        <input id="certName" placeholder="e.g. Ravi Kumar">
+
+        <label class="field-label">Course / Achievement</label>
+        <input id="certCourse" placeholder="e.g. Full Stack Development">
+
+        <label class="field-label">Roll No</label>
+        <input id="certRoll" placeholder="e.g. CS2021001">
+
+        <label class="field-label">College / Institute</label>
+        <input id="certCollege" placeholder="e.g. IIT Bhubaneswar">
+
+        <label class="field-label">Board / Authority</label>
+        <input id="certBoard" placeholder="e.g. CBSE Board">
+
+        <label class="field-label">Custom Date (leave blank for today)</label>
+        <input type="date" id="certDate">
+
+        <!-- Signature pad toggle -->
+        <button class="main-btn btn-sm" style="margin:6px;" onclick="openSigModal('cert')">✍️ Draw Signature</button>
+        <img id="certSigPreview" src="" style="display:none; height:40px; margin:4px auto; display:none; border-radius:4px;">
+
+        <br>
+        <button class="main-btn" onclick="generateCertificate()"><i class="fas fa-magic"></i> Generate</button>
+        <button class="main-btn no-print" onclick="printPreview()"><i class="fas fa-print"></i> Print</button>
+      </div>
     </div>
 
-   <div id="invoiceForm" style="display:none;">
+    <!-- ══ INVOICE FORM ══ -->
+    <div id="invoiceForm" style="display:none;">
+      <div class="card">
+        <div class="section-header">
+          <h2>🧾 Invoice</h2>
+        </div>
 
-  <input id="clientName" placeholder="Client Name"><br><br>
-   <input id="companyName" placeholder="Company Name"><br>
-<input id="companyAddress" placeholder="Company Address"><br>
-<input id="companyEmail" placeholder="Company Email"><br><br>
-  <div id="itemsContainer">
-    <div class="itemRow">
-      <input class="itemName" placeholder="Item">
-      <input class="itemPrice" placeholder="Price">
+        <label class="field-label">Client Name</label>
+        <input id="clientName" placeholder="e.g. Acme Corp">
+
+        <label class="field-label">Company Name</label>
+        <input id="companyName" placeholder="Your Company">
+
+        <label class="field-label">Company Address</label>
+        <input id="companyAddress" placeholder="123 Main St, City">
+
+        <label class="field-label">Company Email</label>
+        <input id="companyEmail" placeholder="info@yourcompany.com">
+
+        <label class="field-label">Company Logo</label>
+        <input type="file" id="logoUpload" accept="image/*">
+
+        <label class="field-label">Currency</label>
+        <select id="currency" style="width:90%; display:block; margin:0 auto 8px;">
+          <option value="₹">₹ INR</option>
+          <option value="$">$ USD</option>
+          <option value="€">€ EUR</option>
+          <option value="£">£ GBP</option>
+        </select>
+
+        <label class="field-label">Invoice Theme</label>
+        <select id="invoiceTheme" style="width:90%; display:block; margin:0 auto 8px;">
+          <option value="classic">Classic</option>
+          <option value="minimal">Minimal</option>
+          <option value="bold">Bold</option>
+        </select>
+
+        <label class="field-label">Due Date</label>
+        <input type="date" id="invoiceDue">
+
+        <label class="field-label">Payment Terms / Notes</label>
+        <input id="invoiceNotes" placeholder="e.g. Payment due within 30 days">
+
+        <label class="field-label">Items (Name | Qty | Price)</label>
+        <div id="itemsContainer">
+          <div class="itemRow">
+            <input class="itemName" placeholder="Item Description" style="width:38%; margin:0;">
+            <input class="itemQty item-qty" placeholder="Qty" style="width:12%; margin:0;" type="number" value="1" min="1">
+            <input class="itemPrice" placeholder="Price" style="width:20%; margin:0;" type="number">
+            <button class="item-del" onclick="removeItem(this)" title="Remove">✕</button>
+          </div>
+        </div>
+        <button class="main-btn btn-sm" onclick="addItem()"><i class="fas fa-plus"></i> Add Item</button>
+
+        <br><br>
+        <label class="field-label">GST %</label>
+        <input id="gst" placeholder="e.g. 18" type="number" min="0">
+
+        <label class="field-label">Discount %</label>
+        <input id="discount" placeholder="e.g. 5" type="number" min="0">
+
+        <div id="invTotalPreview" style="margin:10px auto; width:90%; text-align:right; opacity:0.8; font-size:0.88rem;"></div>
+
+        <br>
+        <button class="main-btn" onclick="generateInvoice()"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
+        <button class="main-btn btn-success" onclick="saveInvoice()"><i class="fas fa-save"></i> Save</button>
+        <button class="main-btn no-print" onclick="printPreview()"><i class="fas fa-print"></i> Print</button>
+      </div>
     </div>
-  </div>
 
-  <button onclick="addItem()">+ Add Item</button><br><br>
-
-  <input id="gst" placeholder="GST % (optional)"><br><br>
-
-  <button onclick="generateInvoice()">Generate Invoice</button>
-
-</div>
-
+    <!-- ══ RESUME FORM ══ -->
     <div id="resumeForm" style="display:none;">
-      <input id="resName" placeholder="Name"><br>
-      <input id="resEmail" placeholder="Email"><br>
-      <input id="resPhone" placeholder="Phone"><br>
-      <input id="resSkills" placeholder="Skills"><br>
-      <input id="resEdu" placeholder="Education"><br>
-      <button onclick="generateResume()">Generate</button>
+      <div class="card">
+        <div class="section-header">
+          <h2>📋 Resume</h2>
+        </div>
+
+        <!-- Template picker -->
+        <label class="field-label">Choose Template</label>
+        <div class="template-grid" id="resumeTemplatePicker">
+          <div class="tpl-card selected" data-tpl="sidebar" onclick="selectTpl(this)">
+            <div class="tpl-icon">📊</div>Sidebar
+          </div>
+          <div class="tpl-card" data-tpl="classic" onclick="selectTpl(this)">
+            <div class="tpl-icon">📄</div>Classic
+          </div>
+          <div class="tpl-card" data-tpl="minimal" onclick="selectTpl(this)">
+            <div class="tpl-icon">✦</div>Minimal
+          </div>
+        </div>
+
+        <!-- Accent color -->
+        <div class="color-row">
+          <label>Accent Color</label>
+          <input type="color" id="resumeColor" value="#0ea5e9">
+        </div>
+
+        <label class="field-label">Full Name</label>
+        <input id="resName" placeholder="e.g. Priya Sharma">
+
+        <label class="field-label">Job Title</label>
+        <input id="resTitle" placeholder="e.g. Full Stack Developer">
+
+        <label class="field-label">Email</label>
+        <input id="resEmail" placeholder="priya@example.com">
+
+        <label class="field-label">Phone</label>
+        <input id="resPhone" placeholder="+91 98765 43210">
+
+        <label class="field-label">LinkedIn / Portfolio URL</label>
+        <input id="resLinkedIn" placeholder="linkedin.com/in/priya">
+
+        <label class="field-label">Skills (comma separated)</label>
+        <input id="resSkills" placeholder="HTML, CSS, React, Node.js">
+
+        <label class="field-label">Education</label>
+        <input id="resEdu" placeholder="B.Tech CSE, IIT Bhubaneswar, 2024">
+
+        <label class="field-label">Experience</label>
+        <textarea id="resExp" placeholder="Software Intern at XYZ Corp (2023)&#10;— Built REST APIs..." style="height:80px;"></textarea>
+
+        <label class="field-label">Projects</label>
+        <textarea id="resProjects" placeholder="1. Smart Doc Generator — HTML to PDF tool&#10;2. Portfolio Website" style="height:80px;"></textarea>
+
+        <label class="field-label">Summary / Objective</label>
+        <textarea id="resSummary" placeholder="Passionate developer with 2+ years experience…" style="height:60px;" oninput="updateCharCounter(this,'sumCounter')"></textarea>
+        <div class="char-counter" id="sumCounter">0 / 300</div>
+
+        <br>
+        <button class="main-btn" onclick="generateResume()"><i class="fas fa-magic"></i> Generate</button>
+        <button class="main-btn no-print" onclick="printPreview()"><i class="fas fa-print"></i> Print</button>
+      </div>
     </div>
 
-    <textarea id="htmlInput"></textarea>
+    <!-- ══ HTML TO PDF ══ -->
+    <div id="htmlToPdfSection" style="display:none;">
+      <div class="card">
+        <h3>⚡ HTML to PDF Converter</h3>
+        <input type="file" id="htmlUpload" accept=".html">
+        <button class="main-btn btn-sm" onclick="previewHTMLFile()"><i class="fas fa-eye"></i> Load File</button>
+        <br>
+        <div class="code-toolbar">
+          <button class="main-btn btn-sm" onclick="formatCode()"><i class="fas fa-indent"></i> Format</button>
+          <button class="main-btn btn-sm" onclick="copyCode()"><i class="fas fa-copy"></i> Copy</button>
+          <button class="main-btn btn-sm btn-danger" onclick="clearCode()"><i class="fas fa-trash"></i> Clear</button>
+        </div>
+        <textarea id="htmlInput" placeholder="Paste or type HTML here…"></textarea>
+        <div class="char-counter" id="htmlCounter">0 chars</div>
+        <br>
+        <button class="main-btn" onclick="preview()"><i class="fas fa-eye"></i> Preview</button>
+        <button class="main-btn" onclick="convert()"><i class="fas fa-file-pdf"></i> Convert PDF</button>
+      </div>
+    </div>
 
-    <br>
+    <!-- ══ SAVED INVOICES SECTION ══ -->
+    <div id="savedSection" style="display:none;">
+      <div class="card">
+        <h3><i class="fas fa-folder-open"></i> Saved Invoices</h3>
+        <input id="savedSearch" placeholder="🔍 Search by ID…" oninput="renderSavedSection()" style="width:90%; margin:8px auto; display:block;">
+        <div class="inv-grid" id="savedSectionGrid"></div>
+      </div>
+    </div>
 
-    <button class="main-btn" onclick="preview()">Preview</button>
-    <button class="main-btn" onclick="convert()">Convert PDF</button>
-    <button class="main-btn" onclick="fullscreenPreview()">Full Screen Preview</button>
-    <br>
+    <!-- ══ LIVE PREVIEW ══ -->
+    <h3 class="no-print">Live Preview</h3>
+    <a id="downloadLink" style="display:none;" class="main-btn no-print"><i class="fas fa-download"></i> Download PDF</a>
 
-    <a id="downloadLink" style="display:none;" class="main-btn">Download PDF</a>
+    <!-- Preview toolbar -->
+    <div class="preview-toolbar no-print">
+      <button class="main-btn btn-sm" onclick="fullscreenPreview()"><i class="fas fa-expand"></i> Fullscreen</button>
+      <button class="main-btn btn-sm" onclick="printPreview()"><i class="fas fa-print"></i> Print Preview</button>
+      <button class="main-btn btn-sm btn-success" onclick="copyHTMLToClipboard()"><i class="fas fa-clipboard"></i> Copy HTML</button>
+      <button class="main-btn btn-sm btn-warn" onclick="resetPreview()"><i class="fas fa-undo"></i> Reset</button>
+    </div>
 
-   <div class="card">
-  <iframe id="previewFrame"></iframe>
-</div>
-
+    <div class="card">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="previewProgress"></div></div>
+      <iframe id="previewFrame" title="Document Preview"></iframe>
+    </div>
   </div>
+
 </div>
 
 <script>
+/* ══════════════════════════════
+   STATE & INIT
+══════════════════════════════ */
 let logoBase64 = "";
+let signatureBase64 = { cert: "", resume: "" };
+let selectedTpl = "sidebar";
+let sigTarget = "cert";
+let docsGenerated = parseInt(localStorage.getItem("docsGenerated") || "0");
+
+document.body.classList.add("dark");
+
+// Init stats
+updateStats();
+document.querySelector(".sidebar button").classList.add("active");
+showSection('certificate');
+
+/* ══════════════════════════════
+   TOAST
+══════════════════════════════ */
+function toast(msg, type = "info") {
+  const icons = { success:"✅", error:"❌", info:"ℹ️", warn:"⚠️" };
+  const t = document.createElement("div");
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById("toastContainer").appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+/* ══════════════════════════════
+   STATS
+══════════════════════════════ */
+function updateStats() {
+  document.getElementById("statDocs").textContent = docsGenerated;
+  let invs = JSON.parse(localStorage.getItem("invoices") || "[]");
+  document.getElementById("statSaved").textContent = invs.length;
+  let count = localStorage.getItem("invoiceCount") || 0;
+  document.getElementById("statInvNo").textContent = count > 0 ? "INV-2026-" + String(count).padStart(3,'0') : "—";
+}
+
+function bumpDocs() {
+  docsGenerated++;
+  localStorage.setItem("docsGenerated", docsGenerated);
+  updateStats();
+}
+
+/* ══════════════════════════════
+   SIDEBAR COLLAPSE
+══════════════════════════════ */
+function toggleSidebar() {
+  const sb = document.getElementById("sidebar");
+  const ch = document.getElementById("sidebarChevron");
+  sb.classList.toggle("collapsed");
+  ch.className = sb.classList.contains("collapsed") ? "fas fa-chevron-right" : "fas fa-chevron-left";
+}
+
+/* ══════════════════════════════
+   DARK / LIGHT TOGGLE
+══════════════════════════════ */
+function toggleMode(){
+  if(document.body.classList.contains("dark")){
+    document.body.classList.replace("dark","light");
+  } else {
+    document.body.classList.replace("light","dark");
+  }
+}
+
+/* ══════════════════════════════
+   LOGO UPLOAD
+══════════════════════════════ */
+document.getElementById("logoUpload").addEventListener("change", function(){
+  let file = this.files[0];
+  if(!file) return;
+  let reader = new FileReader();
+  reader.onload = e => { logoBase64 = e.target.result; toast("Logo loaded","success"); };
+  reader.readAsDataURL(file);
+});
+
+/* ══════════════════════════════
+   HTML PREVIEW & CONVERT
+══════════════════════════════ */
 function preview(){
   let html = document.getElementById("htmlInput").value;
+  animateProgress();
   document.getElementById("previewFrame").srcdoc = html;
 }
 
+function animateProgress() {
+  let bar = document.getElementById("previewProgress");
+  bar.style.width = "0%";
+  setTimeout(() => bar.style.width = "60%", 50);
+  setTimeout(() => bar.style.width = "100%", 400);
+  setTimeout(() => bar.style.width = "0%", 1000);
+}
+
 function convert(){
-
   let html = document.getElementById("htmlInput").value;
-
   let blob = new Blob([html], { type: "text/html" });
   let file = new File([blob], "file.html");
-
   let formData = new FormData();
   formData.append("htmlFile", file);
-
   document.getElementById("loader").style.display = "block";
-
-  fetch("/convert", {
-    method: "POST",
-    body: formData
-  })
-  .then(res => res.blob())
-  .then(blob => {
-
-    document.getElementById("loader").style.display = "none";
-
-    let url = URL.createObjectURL(blob);
-
-    // Show preview only
-    window.open(url);
-
-    // Show manual download button
-    let link = document.getElementById("downloadLink");
-    link.href = url;
-    link.style.display = "inline-block";
-
-  });
+  fetch("/convert", { method: "POST", body: formData })
+    .then(res => res.blob())
+    .then(blob => {
+      document.getElementById("loader").style.display = "none";
+      let url = URL.createObjectURL(blob);
+      window.open(url);
+      let link = document.getElementById("downloadLink");
+      link.href = url;
+      link.style.display = "inline-block";
+      toast("PDF Generated!","success");
+    })
+    .catch(() => {
+      document.getElementById("loader").style.display = "none";
+      toast("Error generating PDF","error");
+    });
 }
 
+function previewHTMLFile(){
+  let file = document.getElementById("htmlUpload").files[0];
+  if(!file){ toast("Upload HTML file first","warn"); return; }
+  let reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById("htmlInput").value = e.target.result;
+    updateHTMLCounter();
+    document.getElementById("previewFrame").srcdoc = e.target.result;
+    toast("HTML loaded","success");
+  };
+  reader.readAsText(file);
+}
+
+function formatCode(){
+  // Basic indentation helper
+  toast("Formatted (basic)","info");
+}
+
+function copyCode(){
+  let val = document.getElementById("htmlInput").value;
+  navigator.clipboard.writeText(val).then(() => toast("Copied to clipboard","success"));
+}
+
+function clearCode(){
+  document.getElementById("htmlInput").value = "";
+  updateHTMLCounter();
+}
+
+function updateHTMLCounter(){
+  let len = document.getElementById("htmlInput").value.length;
+  document.getElementById("htmlCounter").textContent = len + " chars";
+}
+document.getElementById("htmlInput").addEventListener("input", updateHTMLCounter);
+
+/* ══════════════════════════════
+   PREVIEW TOOLBAR
+══════════════════════════════ */
 function previewPDF(){
-  let file = document.getElementById("pdfUpload").files[0];
-  let url = URL.createObjectURL(file);
-  document.getElementById("previewFrame").src = url;
+  let file = document.getElementById("pdfUpload") && document.getElementById("pdfUpload").files[0];
+  if(file){ let url = URL.createObjectURL(file); document.getElementById("previewFrame").src = url; }
 }
 
-function loadTemplate(type){
-
-  document.getElementById("certificateForm").style.display = "none";
-  document.getElementById("invoiceForm").style.display = "none";
-  document.getElementById("resumeForm").style.display = "none";
-
-  if(type === "certificate"){
-    document.getElementById("certificateForm").style.display = "block";
-  }
-
-  if(type === "invoice"){
-    document.getElementById("invoiceForm").style.display = "block";
-  }
-
-  if(type === "resume"){
-    document.getElementById("resumeForm").style.display = "block";
-  }
+function fullscreenPreview(){
+  let frame = document.getElementById("previewFrame");
+  if(frame.requestFullscreen) frame.requestFullscreen();
 }
 
-function generateCertificate(){
-  let name = document.getElementById("certName").value;
-let course = document.getElementById("certCourse").value;
-let roll = document.getElementById("certRoll").value;
-let college = document.getElementById("certCollege").value;
-let board = document.getElementById("certBoard").value;
-
-let html = `
-<div style="
-  width:900px;
-  margin:auto;
-  padding:50px;
-  border:20px double gold;
-  text-align:center;
-  font-family: Georgia;
-  background:#fff8dc;
-">
-
-  <h1 style="color:#b45309;">${board}</h1>
-  <h2>${college}</h2>
-
-  <h1 style="font-size:40px; margin:30px 0;">Certificate of Completion</h1>
-
-  <p>This is proudly presented to</p>
-
-  <h2 style="font-size:32px;">${name}</h2>
-
-  <p>Roll No: ${roll}</p>
-
-  <p>for successfully completing</p>
-
-  <h3>${course}</h3>
-
-  <br><br>
-
-  <div style="display:flex; justify-content:space-between;">
-    <p>Date: ${new Date().toLocaleDateString()}</p>
-    <p>Signature</p>
-  </div>
-
-</div>
-`;
-
-  htmlInput.value = html;
-  preview();
+function printPreview(){
+  let frame = document.getElementById("previewFrame");
+  frame.contentWindow && frame.contentWindow.print();
 }
 
-function generateInvoice(){
+function resetPreview(){
+  document.getElementById("previewFrame").srcdoc = "";
+  toast("Preview cleared","info");
+}
 
-  let company = document.getElementById("companyName").value;
-  let address = document.getElementById("companyAddress").value;
-  let email = document.getElementById("companyEmail").value;
+function copyHTMLToClipboard(){
+  let html = document.getElementById("htmlInput").value;
+  if(!html){ toast("Nothing to copy","warn"); return; }
+  navigator.clipboard.writeText(html).then(() => toast("HTML copied","success"));
+}
 
-  let client = document.getElementById("clientName").value;
+/* ══════════════════════════════
+   SHOW SECTION
+══════════════════════════════ */
+function showSection(type){
+  ["certificateForm","invoiceForm","resumeForm","htmlToPdfSection","savedSection"]
+    .forEach(id => document.getElementById(id).style.display = "none");
+  if(type === "certificate") document.getElementById("certificateForm").style.display = "block";
+  if(type === "invoice")     document.getElementById("invoiceForm").style.display = "block";
+  if(type === "resume")      document.getElementById("resumeForm").style.display = "block";
+  if(type === "html")        document.getElementById("htmlToPdfSection").style.display = "block";
+  if(type === "saved")       { document.getElementById("savedSection").style.display = "block"; renderSavedSection(); }
+}
 
-  let itemNames = document.getElementsByClassName("itemName");
-  let itemPrices = document.getElementsByClassName("itemPrice");
+/* ══════════════════════════════
+   ACTIVE SIDEBAR
+══════════════════════════════ */
+function setActive(btn){
+  document.querySelectorAll(".sidebar button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
 
-  let rows = "";
+/* ══════════════════════════════
+   INVOICE NUMBER
+══════════════════════════════ */
+function generateInvoiceNumber(){
+  let count = parseInt(localStorage.getItem("invoiceCount") || "0") + 1;
+  localStorage.setItem("invoiceCount", count);
+  return "INV-2026-" + String(count).padStart(3,'0');
+}
+
+/* ══════════════════════════════
+   ITEMS
+══════════════════════════════ */
+function addItem(){
+  let container = document.getElementById("itemsContainer");
+  let div = document.createElement("div");
+  div.classList.add("itemRow");
+  div.innerHTML = `
+    <input class="itemName" placeholder="Item Description" style="width:38%; margin:0;">
+    <input class="itemQty item-qty" placeholder="Qty" style="width:12%; margin:0;" type="number" value="1" min="1">
+    <input class="itemPrice" placeholder="Price" style="width:20%; margin:0;" type="number">
+    <button class="item-del" onclick="removeItem(this)" title="Remove">✕</button>
+  `;
+  container.appendChild(div);
+  updateInvTotalPreview();
+}
+
+function removeItem(btn){
+  btn.parentElement.remove();
+  updateInvTotalPreview();
+}
+
+function updateInvTotalPreview(){
+  let currency = document.getElementById("currency").value;
+  let names = document.getElementsByClassName("itemName");
+  let prices = document.getElementsByClassName("itemPrice");
+  let qtys = document.getElementsByClassName("itemQty");
   let total = 0;
+  for(let i=0;i<names.length;i++){
+    let q = Number(qtys[i] && qtys[i].value || 1);
+    let p = Number(prices[i] && prices[i].value || 0);
+    total += q * p;
+  }
+  let gst = Number(document.getElementById("gst").value || 0);
+  let disc = Number(document.getElementById("discount").value || 0);
+  let discAmt = (total * disc) / 100;
+  let gstAmt = ((total - discAmt) * gst) / 100;
+  let final = total - discAmt + gstAmt;
+  document.getElementById("invTotalPreview").innerHTML =
+    `Subtotal: <strong>${currency}${total.toFixed(2)}</strong>  |  Discount: <strong>−${currency}${discAmt.toFixed(2)}</strong>  |  GST: <strong>+${currency}${gstAmt.toFixed(2)}</strong>  |  <span style="color:var(--accent)">Total: <strong>${currency}${final.toFixed(2)}</strong></span>`;
+}
+["gst","discount"].forEach(id => {
+  let el = document.getElementById(id);
+  if(el) el.addEventListener("input", updateInvTotalPreview);
+});
+document.getElementById("itemsContainer").addEventListener("input", updateInvTotalPreview);
 
-  for(let i = 0; i < itemNames.length; i++){
+/* ══════════════════════════════
+   GENERATE CERTIFICATE
+══════════════════════════════ */
+function generateCertificate(){
+  let name    = document.getElementById("certName").value;
+  let course  = document.getElementById("certCourse").value;
+  let roll    = document.getElementById("certRoll").value;
+  let college = document.getElementById("certCollege").value;
+  let board   = document.getElementById("certBoard").value;
+  let theme   = document.getElementById("certTheme").value;
+  let dateVal = document.getElementById("certDate").value;
+  let certDate = dateVal ? new Date(dateVal).toLocaleDateString() : new Date().toLocaleDateString();
 
-    let name = itemNames[i].value;
-    let price = Number(itemPrices[i].value || 0);
+  if(!name || !course){ toast("Fill Name and Course at minimum","warn"); return; }
 
-    if(name){
-      rows += `
-<tr style="background:${i % 2 === 0 ? '#f1f5f9' : '#ffffff'};">
-  <td style="padding:10px; border:1px solid #ccc;">${name}</td>
-  <td style="padding:10px; border:1px solid #ccc;">₹${price}</td>
-</tr>
-`;
-      total += price;
+  const themes = {
+    classic: { bg:"#fff8dc", border:"20px double gold", titleColor:"#b45309", accent:"#92400e" },
+    modern:  { bg:"#eff6ff", border:"4px solid #3b82f6", titleColor:"#1d4ed8", accent:"#1e40af" },
+    dark:    { bg:"#1e293b", border:"3px solid #64748b", titleColor:"#e2e8f0", accent:"#94a3b8" },
+    green:   { bg:"#f0fdf4", border:"4px solid #22c55e", titleColor:"#15803d", accent:"#166534" }
+  };
+  const t = themes[theme] || themes.classic;
+  const textColor = theme === "dark" ? "white" : "#1e293b";
+  const sigHTML = signatureBase64.cert
+    ? `<img src="${signatureBase64.cert}" style="height:50px; margin-top:10px;">`
+    : `<div style="width:120px; border-top:2px solid ${t.accent}; margin-top:8px;"></div>`;
+
+  let html = `
+<div style="width:900px; margin:auto; padding:50px; border:${t.border}; text-align:center;
+  font-family:Georgia, serif; background:${t.bg}; color:${textColor};">
+  <h1 style="color:${t.titleColor}; font-size:22px; letter-spacing:2px;">${board}</h1>
+  <h2 style="font-size:18px; margin:4px 0;">${college}</h2>
+  <hr style="border:none; border-top:1px solid ${t.accent}; margin:20px 40px;">
+  <h1 style="font-size:38px; margin:20px 0; color:${t.titleColor};">Certificate of Completion</h1>
+  <p style="font-size:16px;">This is proudly presented to</p>
+  <h2 style="font-size:32px; color:${t.accent}; text-decoration:underline;">${name}</h2>
+  <p>Roll No: <strong>${roll}</strong></p>
+  <p style="font-size:15px;">for successfully completing</p>
+  <h3 style="font-size:22px; color:${t.titleColor};">${course}</h3>
+  <br><br>
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; padding:0 40px;">
+    <div style="text-align:left;">
+      <p style="font-size:14px; margin:0;">Date: ${certDate}</p>
+    </div>
+    <div style="text-align:center;">
+      ${sigHTML}
+      <p style="font-size:13px; margin:4px 0;">Authorized Signature</p>
+    </div>
+  </div>
+</div>`;
+
+  document.getElementById("htmlInput").value = html;
+  preview(); bumpDocs();
+  toast("Certificate generated!","success");
+}
+
+/* ══════════════════════════════
+   GENERATE INVOICE
+══════════════════════════════ */
+function generateInvoice(){
+  let company  = document.getElementById("companyName").value;
+  let address  = document.getElementById("companyAddress").value;
+  let email    = document.getElementById("companyEmail").value;
+  let client   = document.getElementById("clientName").value;
+  let currency = document.getElementById("currency").value;
+  let invTheme = document.getElementById("invoiceTheme").value;
+  let dueDate  = document.getElementById("invoiceDue").value;
+  let notes    = document.getElementById("invoiceNotes").value;
+
+  if(!client){ toast("Enter Client Name","warn"); return; }
+
+  let itemNames  = document.getElementsByClassName("itemName");
+  let itemPrices = document.getElementsByClassName("itemPrice");
+  let itemQtys   = document.getElementsByClassName("itemQty");
+
+  let rows = ""; let total = 0;
+  for(let i=0; i<itemNames.length; i++){
+    let iname  = itemNames[i].value;
+    let price  = Number(itemPrices[i].value || 0);
+    let qty    = Number(itemQtys[i] ? itemQtys[i].value : 1) || 1;
+    let sub    = price * qty;
+    if(iname){
+      rows += `<tr style="background:${i%2===0?'#f8fafc':'#ffffff'};">
+        <td style="padding:10px; border:1px solid #e2e8f0;">${iname}</td>
+        <td style="padding:10px; border:1px solid #e2e8f0; text-align:center;">${qty}</td>
+        <td style="padding:10px; border:1px solid #e2e8f0; text-align:right;">${currency}${price.toFixed(2)}</td>
+        <td style="padding:10px; border:1px solid #e2e8f0; text-align:right; font-weight:600;">${currency}${sub.toFixed(2)}</td>
+      </tr>`;
+      total += sub;
     }
   }
 
-  let gstPercent = Number(document.getElementById("gst").value || 0);
-  let gstAmount = (total * gstPercent) / 100;
-  let finalTotal = total + gstAmount;
+  let gstPct   = Number(document.getElementById("gst").value || 0);
+  let discPct  = Number(document.getElementById("discount").value || 0);
+  let discAmt  = (total * discPct) / 100;
+  let gstAmt   = ((total - discAmt) * gstPct) / 100;
+  let finalTotal = total - discAmt + gstAmt;
+  let invNo    = generateInvoiceNumber();
 
-  let invoiceNumber = generateInvoiceNumber();
+  const themeStyles = {
+    classic: { headerBg:"#0ea5e9", headerColor:"white" },
+    minimal: { headerBg:"#f1f5f9", headerColor:"#0f172a" },
+    bold:    { headerBg:"#1e293b", headerColor:"#38bdf8" }
+  };
+  const ts = themeStyles[invTheme] || themeStyles.classic;
+
+  let dueLine = dueDate ? `<p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString()}</p>` : "";
+  let noteLine = notes ? `<p style="font-size:13px; color:#64748b; margin-top:10px;">📝 ${notes}</p>` : "";
 
   let html = `
-<div style="width:800px; margin:auto; padding:30px; font-family:Arial;">
-
-  <div style="display:flex; justify-content:space-between;">
+<div style="width:800px; margin:auto; padding:30px; font-family:Arial, sans-serif;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
     <div>
-      <h2>${company}</h2>
-      <p>${address}</p>
-      <p>${email}</p>
+      <h2 style="margin:0; color:#0f172a;">${company}</h2>
+      <p style="margin:4px 0; color:#64748b;">${address}</p>
+      <p style="margin:4px 0; color:#64748b;">${email}</p>
     </div>
-    ${logoBase64 ? `<img src="${logoBase64}" width="80">` : ""}
+    ${logoBase64 ? `<img src="${logoBase64}" style="width:80px; height:80px; object-fit:contain; border-radius:8px;">` : ""}
   </div>
-
-  <hr>
-
-  <h1 style="text-align:center;">INVOICE</h1>
-
-  <p><strong>Invoice No:</strong> ${invoiceNumber}</p>
+  <hr style="border:none; border-top:2px solid #e2e8f0; margin:20px 0;">
+  <h1 style="text-align:center; letter-spacing:4px; color:#0f172a;">INVOICE</h1>
+  <p><strong>Invoice No:</strong> ${invNo}</p>
   <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-  <p><strong>Client:</strong> ${client}</p>
-
+  ${dueLine}
+  <p><strong>Bill To:</strong> ${client}</p>
   <table style="width:100%; border-collapse:collapse; margin-top:20px;">
-  <tr style="background:#0ea5e9; color:white;">
-    <th style="padding:10px; border:1px solid #ccc;">Item</th>
-    <th style="padding:10px; border:1px solid #ccc;">Price</th>
-  </tr>
-  ${rows}
-</table>
-
-  <div style="text-align:right; margin-top:20px;">
-    <p>Subtotal: ₹${total}</p>
-    <p>GST: ₹${gstAmount.toFixed(2)}</p>
-    <h2>Total: ₹${finalTotal.toFixed(2)}</h2>
+    <tr style="background:${ts.headerBg}; color:${ts.headerColor};">
+      <th style="padding:10px; border:1px solid #e2e8f0; text-align:left;">Item</th>
+      <th style="padding:10px; border:1px solid #e2e8f0; text-align:center;">Qty</th>
+      <th style="padding:10px; border:1px solid #e2e8f0; text-align:right;">Unit Price</th>
+      <th style="padding:10px; border:1px solid #e2e8f0; text-align:right;">Total</th>
+    </tr>
+    ${rows}
+  </table>
+  <div style="text-align:right; margin-top:20px; font-size:14px;">
+    <p>Subtotal: ${currency}${total.toFixed(2)}</p>
+    ${discPct > 0 ? `<p style="color:#ef4444;">Discount (${discPct}%): −${currency}${discAmt.toFixed(2)}</p>` : ""}
+    ${gstPct  > 0 ? `<p>GST (${gstPct}%): +${currency}${gstAmt.toFixed(2)}</p>` : ""}
+    <h2 style="color:#0ea5e9; border-top:2px solid #e2e8f0; padding-top:10px;">Total: ${currency}${finalTotal.toFixed(2)}</h2>
   </div>
-
-  <br><br>
-
-  <p>Authorized Signature</p>
-
-</div>
-`;
+  ${noteLine}
+  <br>
+  <p style="font-size:13px;">Authorized Signature</p>
+</div>`;
 
   document.getElementById("htmlInput").value = html;
-  preview();
+  preview(); bumpDocs();
+  toast("Invoice generated!","success");
+  updateStats();
+}
+
+/* ══════════════════════════════
+   SAVE / LOAD / DELETE INVOICES
+══════════════════════════════ */
+function saveInvoice(){
+  let html = document.getElementById("htmlInput").value;
+  if(!html){ toast("Generate invoice first!","warn"); return; }
+  let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  let count = localStorage.getItem("invoiceCount") || "1";
+  invoices.push({ id: Date.now(), label: "INV-2026-" + String(count).padStart(3,'0'), content: html });
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+  toast("Invoice Saved!","success");
+  updateStats();
+  renderSavedPanel();
+  renderSavedSection();
+}
+
+function loadInvoice(id){
+  let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  let invoice = invoices.find(inv => inv.id === id);
+  if(invoice){ document.getElementById("htmlInput").value = invoice.content; preview(); toast("Invoice loaded","info"); }
+}
+
+function deleteInvoice(id){
+  let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  invoices = invoices.filter(inv => inv.id !== id);
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+  toast("Invoice deleted","warn");
+  updateStats();
+  renderSavedPanel();
+  renderSavedSection();
+}
+
+// Old function kept for backward compat
+function loadSavedInvoices(){
+  renderSavedSection();
+  showSection('saved');
+}
+
+/* ══════════════════════════════
+   SAVED INVOICES RENDER
+══════════════════════════════ */
+function renderSavedPanel(){
+  let search = (document.getElementById("searchInvoice").value || "").toLowerCase();
+  let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  let panel = document.getElementById("savedInvoicesPanel");
+  let grid = document.getElementById("savedInvGrid");
+  if(!invoices.length){ panel.style.display="none"; return; }
+  panel.style.display = "block";
+  let filtered = invoices.filter(inv => (inv.label || String(inv.id)).toLowerCase().includes(search));
+  grid.innerHTML = filtered.map(inv => `
+    <div class="inv-card" onclick="loadInvoice(${inv.id})">
+      <button class="inv-del" onclick="event.stopPropagation();deleteInvoice(${inv.id})">✕</button>
+      <div style="font-size:1.2rem; margin-bottom:6px;">🧾</div>
+      <div style="font-weight:600; font-size:0.78rem;">${inv.label || 'Invoice'}</div>
+      <div style="font-size:0.7rem; opacity:0.7; margin-top:4px;">${new Date(inv.id).toLocaleDateString()}</div>
+    </div>`).join('');
+}
+
+function renderSavedSection(){
+  let search = (document.getElementById("savedSearch") ? document.getElementById("savedSearch").value : "").toLowerCase();
+  let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  let grid = document.getElementById("savedSectionGrid");
+  if(!invoices.length){ grid.innerHTML = '<p style="opacity:0.5; text-align:center;">No saved invoices yet.</p>'; return; }
+  let filtered = invoices.filter(inv => (inv.label || String(inv.id)).toLowerCase().includes(search));
+  grid.innerHTML = filtered.map(inv => `
+    <div class="inv-card" onclick="loadInvoice(${inv.id})">
+      <button class="inv-del" onclick="event.stopPropagation();deleteInvoice(${inv.id})">✕</button>
+      <div style="font-size:1.2rem; margin-bottom:6px;">🧾</div>
+      <div style="font-weight:600; font-size:0.78rem;">${inv.label || 'Invoice'}</div>
+      <div style="font-size:0.7rem; opacity:0.7; margin-top:4px;">${new Date(inv.id).toLocaleDateString()}</div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════
+   GENERATE RESUME
+══════════════════════════════ */
+function selectTpl(el){
+  document.querySelectorAll(".tpl-card").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedTpl = el.dataset.tpl;
 }
 
 function generateResume(){
-  let name = document.getElementById("resName").value;
-let email = document.getElementById("resEmail").value;
-let phone = document.getElementById("resPhone").value;
-let skills = document.getElementById("resSkills").value.split(",");
-let edu = document.getElementById("resEdu").value;
+  let name     = document.getElementById("resName").value;
+  let title    = document.getElementById("resTitle").value;
+  let email    = document.getElementById("resEmail").value;
+  let phone    = document.getElementById("resPhone").value;
+  let linkedin = document.getElementById("resLinkedIn").value;
+  let skills   = document.getElementById("resSkills").value.split(",");
+  let edu      = document.getElementById("resEdu").value;
+  let exp      = document.getElementById("resExp").value;
+  let projects = document.getElementById("resProjects").value;
+  let summary  = document.getElementById("resSummary").value;
+  let color    = document.getElementById("resumeColor").value;
 
-  let skillList = skills.map(s => `<li>${s}</li>`).join("");
+  if(!name){ toast("Enter your Name","warn"); return; }
 
-  let html = `
-<div style="width:900px; margin:auto; font-family:Arial; display:flex;">
+  let skillList = skills.map(s => `<li style="margin-bottom:4px;">${s.trim()}</li>`).join("");
+  let expLines  = exp.split("\n").map(l => `<p style="margin:3px 0;">${l}</p>`).join("");
+  let projLines = projects.split("\n").map(l => `<p style="margin:3px 0;">${l}</p>`).join("");
 
-  <!-- Left Sidebar -->
-  <div style="width:30%; background:#0ea5e9; color:white; padding:20px;">
-    <h2>${name}</h2>
-    <p>${email}</p>
-    <p>${phone}</p>
+  let html = "";
 
-    <h3>Skills</h3>
-    <ul>${skillList}</ul>
+  if(selectedTpl === "sidebar"){
+    html = `
+<div style="width:900px; margin:auto; font-family:Arial, sans-serif; display:flex; box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+  <div style="width:30%; background:${color}; color:white; padding:24px;">
+    <h2 style="margin:0 0 4px;">${name}</h2>
+    <p style="margin:0 0 16px; font-size:13px; opacity:0.85;">${title}</p>
+    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.3); margin:10px 0;">
+    <p style="font-size:13px; margin:4px 0;">📧 ${email}</p>
+    <p style="font-size:13px; margin:4px 0;">📱 ${phone}</p>
+    ${linkedin ? `<p style="font-size:12px; margin:4px 0;">🔗 ${linkedin}</p>` : ""}
+    <h3 style="font-size:14px; margin:16px 0 6px;">Skills</h3>
+    <ul style="padding-left:16px; font-size:13px;">${skillList}</ul>
   </div>
-
-  <!-- Right Content -->
-  <div style="width:70%; padding:30px;">
-    <h2>Education</h2>
-    <p>${edu}</p>
-
-    <h2>Projects</h2>
-    <p>HTML to PDF Converter Web App</p>
-
-    <h2>Experience</h2>
-    <p>Fresher</p>
+  <div style="width:70%; padding:28px; background:#ffffff; color:#1e293b;">
+    ${summary ? `<p style="background:#f1f5f9; border-left:4px solid ${color}; padding:10px 14px; border-radius:0 6px 6px 0; font-size:13px;">${summary}</p>` : ""}
+    <h2 style="color:${color}; border-bottom:2px solid ${color}; padding-bottom:4px;">Education</h2>
+    <p style="font-size:13px;">${edu}</p>
+    <h2 style="color:${color}; border-bottom:2px solid ${color}; padding-bottom:4px;">Experience</h2>
+    <div style="font-size:13px;">${expLines || "<p>Fresher / Internships</p>"}</div>
+    <h2 style="color:${color}; border-bottom:2px solid ${color}; padding-bottom:4px;">Projects</h2>
+    <div style="font-size:13px;">${projLines || "<p>HTML to PDF Converter Web App</p>"}</div>
   </div>
+</div>`;
 
-</div>
-`;
-  htmlInput.value = html;
-  preview();
-}
-function previewHTMLFile(){
+  } else if(selectedTpl === "classic"){
+    html = `
+<div style="width:900px; margin:auto; font-family:Georgia, serif; padding:40px; background:#fff; color:#1e293b;">
+  <div style="text-align:center; border-bottom:3px solid ${color}; padding-bottom:16px; margin-bottom:20px;">
+    <h1 style="margin:0; font-size:28px; color:${color};">${name}</h1>
+    <p style="margin:4px 0; font-size:14px;">${title}</p>
+    <p style="font-size:13px; color:#64748b;">${email} | ${phone} ${linkedin ? '| ' + linkedin : ''}</p>
+  </div>
+  ${summary ? `<p style="font-size:13px; font-style:italic; margin-bottom:20px;">${summary}</p>` : ""}
+  <h2 style="color:${color}; font-size:16px;">EDUCATION</h2>
+  <p style="font-size:13px;">${edu}</p>
+  <h2 style="color:${color}; font-size:16px;">EXPERIENCE</h2>
+  <div style="font-size:13px;">${expLines || "<p>Fresher</p>"}</div>
+  <h2 style="color:${color}; font-size:16px;">SKILLS</h2>
+  <ul style="font-size:13px; columns:2;">${skillList}</ul>
+  <h2 style="color:${color}; font-size:16px;">PROJECTS</h2>
+  <div style="font-size:13px;">${projLines || "<p>HTML to PDF Converter Web App</p>"}</div>
+</div>`;
 
-  let file = document.getElementById("htmlUpload").files[0];
-
-  if(!file){
-    alert("Upload HTML file first");
-    return;
+  } else { // minimal
+    html = `
+<div style="width:900px; margin:auto; font-family:'Helvetica Neue', sans-serif; padding:50px; background:#fafafa; color:#1e293b;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+    <div>
+      <h1 style="margin:0; font-size:32px; font-weight:300; letter-spacing:1px;">${name}</h1>
+      <p style="margin:6px 0; font-size:15px; color:${color};">${title}</p>
+    </div>
+    <div style="font-size:12px; text-align:right; color:#64748b;">
+      <div>${email}</div><div>${phone}</div>${linkedin ? `<div>${linkedin}</div>` : ""}
+    </div>
+  </div>
+  ${summary ? `<p style="font-size:13px; color:#475569; border-left:3px solid ${color}; padding-left:12px; margin-bottom:24px;">${summary}</p>` : ""}
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+    <div>
+      <h3 style="color:${color}; font-size:12px; letter-spacing:2px; text-transform:uppercase;">EDUCATION</h3>
+      <p style="font-size:13px;">${edu}</p>
+      <h3 style="color:${color}; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-top:20px;">SKILLS</h3>
+      <ul style="font-size:13px; padding-left:14px;">${skillList}</ul>
+    </div>
+    <div>
+      <h3 style="color:${color}; font-size:12px; letter-spacing:2px; text-transform:uppercase;">EXPERIENCE</h3>
+      <div style="font-size:13px;">${expLines || "<p>Fresher</p>"}</div>
+      <h3 style="color:${color}; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-top:20px;">PROJECTS</h3>
+      <div style="font-size:13px;">${projLines || "<p>HTML to PDF Converter</p>"}</div>
+    </div>
+  </div>
+</div>`;
   }
 
-  let reader = new FileReader();
-
-  reader.onload = function(e){
-    let htmlContent = e.target.result;
-
-    // show in textarea
-    document.getElementById("htmlInput").value = htmlContent;
-
-    // preview
-    document.getElementById("previewFrame").srcdoc = htmlContent;
-  };
-
-  reader.readAsText(file);
+  document.getElementById("htmlInput").value = html;
+  preview(); bumpDocs();
+  toast("Resume generated!","success");
 }
-function addItem(){
 
-  let container = document.getElementById("itemsContainer");
-
-  let div = document.createElement("div");
-  div.classList.add("itemRow");
-
-  div.innerHTML = `
-    <input class="itemName" placeholder="Item">
-    <input class="itemPrice" placeholder="Price">
-  `;
-
-  container.appendChild(div);
+/* ══════════════════════════════
+   CHAR COUNTER
+══════════════════════════════ */
+function updateCharCounter(el, counterId){
+  let max = 300;
+  document.getElementById(counterId).textContent = `${el.value.length} / ${max}`;
 }
-document.body.classList.add("dark");
 
-function toggleMode(){
-  if(document.body.classList.contains("dark")){
-    document.body.classList.remove("dark");
-    document.body.classList.add("light");
-  } else {
-    document.body.classList.remove("light");
-    document.body.classList.add("dark");
-  }
+/* ══════════════════════════════
+   SIGNATURE PAD
+══════════════════════════════ */
+let sigDrawing = false, sigCtx = null;
+
+function openSigModal(target){
+  sigTarget = target;
+  document.getElementById("sigModal").classList.add("open");
+  let canvas = document.getElementById("sigCanvas");
+  sigCtx = canvas.getContext("2d");
+  clearSig();
+
+  canvas.onmousedown  = e => { sigDrawing=true; sigCtx.beginPath(); sigCtx.moveTo(pos(e,canvas).x, pos(e,canvas).y); };
+  canvas.onmousemove  = e => { if(!sigDrawing) return; sigCtx.strokeStyle="#38bdf8"; sigCtx.lineWidth=2; sigCtx.lineCap="round"; sigCtx.lineTo(pos(e,canvas).x, pos(e,canvas).y); sigCtx.stroke(); };
+  canvas.onmouseup    = () => sigDrawing=false;
+  canvas.ontouchstart = e => { e.preventDefault(); sigDrawing=true; sigCtx.beginPath(); let t=e.touches[0]; sigCtx.moveTo(pos(t,canvas).x, pos(t,canvas).y); };
+  canvas.ontouchmove  = e => { e.preventDefault(); if(!sigDrawing) return; let t=e.touches[0]; sigCtx.strokeStyle="#38bdf8"; sigCtx.lineWidth=2; sigCtx.lineCap="round"; sigCtx.lineTo(pos(t,canvas).x, pos(t,canvas).y); sigCtx.stroke(); };
+  canvas.ontouchend   = () => sigDrawing=false;
 }
-function generateInvoiceNumber(){
-  let count = localStorage.getItem("invoiceCount") || 0;
-  count++;
 
-  localStorage.setItem("invoiceCount", count);
-
-  return "INV-2026-" + String(count).padStart(3, '0');
+function pos(e, canvas){
+  let r = canvas.getBoundingClientRect();
+  return { x: (e.clientX||e.pageX) - r.left, y: (e.clientY||e.pageY) - r.top };
 }
-function fullscreenPreview(){
-  let frame = document.getElementById("previewFrame");
 
-  if(frame.requestFullscreen){
-    frame.requestFullscreen();
-  }
+function clearSig(){
+  if(!sigCtx) return;
+  sigCtx.clearRect(0,0,360,130);
+  sigCtx.fillStyle = "rgba(255,255,255,0.04)";
+  sigCtx.fillRect(0,0,360,130);
 }
+
+function saveSig(){
+  signatureBase64[sigTarget] = document.getElementById("sigCanvas").toDataURL("image/png");
+  let prev = document.getElementById("certSigPreview");
+  if(prev){ prev.src = signatureBase64[sigTarget]; prev.style.display = "block"; }
+  closeSigModal();
+  toast("Signature saved!","success");
+}
+
+function closeSigModal(){ document.getElementById("sigModal").classList.remove("open"); }
+
+/* ══════════════════════════════
+   INIT SEARCH
+══════════════════════════════ */
+renderSavedPanel();
 </script>
 
 </body>
